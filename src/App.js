@@ -7,7 +7,13 @@ import SignUp from './pages/SignUp';
 import { UserContextProvider, useUserContext } from 'contexts/UserContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Home from 'pages/Home';
+import CreateJob from 'pages/CreateJobs'
 import './index.css'
+import Main from 'pages/Main';
+import MyJob from 'pages/MyJob';
+import Salary from 'pages/Salary';
+import UpdateJob from 'pages/UpdateJobs';
+import DetailJob from 'pages/DetailJob';
 // Router Protect layer
 
 const client_id = "439847719014-pkff4061t2kdmokun7m3iggr6isgpea6.apps.googleusercontent.com"
@@ -43,18 +49,61 @@ const ReactRouter = () => {
         {/* Sau khi đăng nhập */}
         <Route path='/seeker' element={
           <ProtectedRoute user={user} role={'seeker'}>
+              <Main/>
+          </ProtectedRoute>
+          
+        }>
+          <Route path='' element={
+          <ProtectedRoute user={user} role={'seeker'}>
               <Home/>
-          </ProtectedRoute>
-        }>
+          </ProtectedRoute>}/>
+          <Route path='my-job' element={
+          <ProtectedRoute user={user} role={'seeker'}>
+              <MyJob/>
+          </ProtectedRoute>}/>
+          <Route path='salary' element={
+          <ProtectedRoute user={user} role={'seeker'}>
+              <Salary/>
+          </ProtectedRoute>}/>
+          <Route path=':id' element={
+          <ProtectedRoute user={user} role={'seeker'}>
+              <DetailJob/>
+          </ProtectedRoute>}/>
         </Route>
-
+            {/* employeer */}
         <Route path='/employeer' element={
-          <ProtectedRoute user={user} role={'employeer'}>
-              <MainLayout/>
+          <ProtectedRoute user={user} role={'employer'}>
+              <Main/>
           </ProtectedRoute>
         }>
+          <Route path='' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <Home/>
+          </ProtectedRoute>}/>
+          <Route path='post-job' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <CreateJob/>
+          </ProtectedRoute>}/>
+          <Route path='my-job' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <MyJob/>
+          </ProtectedRoute>}/>
+          <Route path='salary' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <Salary/>
+          </ProtectedRoute>}/>
+          <Route path='edit-job/:id' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <UpdateJob/>
+          </ProtectedRoute>}/>
+          <Route path=':id' element={
+          <ProtectedRoute user={user} role={'employer'}>
+              <DetailJob/>
+          </ProtectedRoute>}/>
         </Route>
+            
         </Routes>
+        
     </BrowserRouter>
   )
 }

@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {FaBarsStaggered, FaXmark} from "react-icons/fa6"
+import { useUserContext } from "contexts/UserContext";
 
-const Navbar = () => {
+const Navbar = ({role}) => {
     const [isMenuOpen, setIsmenuOpen] = useState(false);
-
+    const [user,] = useUserContext();
     const handleMennuToggler = () => {
         setIsmenuOpen(!isMenuOpen)
     }
 
     const navItems = [
-        { path: "/", title: "Start a search" },
-        { path: "/my-job", title: "My Jobs" },
-        { path: "/salary", title: "Salary Estimate" },
-        { path: "/post-job", title: "Post A Job" },
+        { path: role === "seeker" ? '/seeker' : '/employeer', title: "Tìm kiếm" },
+        { path: role === "seeker" ? '/seeker/my-job' : '/employeer/my-job', title: "Công việc của tôi" },
+        { path:role === "seeker" ? '/seeker/salary' : '/employeer/salary', title: "Bảng lương" },
+        { path: "/employeer/post-job", title: "Đăng tuyển" },
     ]
     return (
         <header className="max-w-screen-2x1 container mx-auto xl:px-24 px-4">
@@ -42,7 +43,6 @@ const Navbar = () => {
                     </ul>
                
                 <div className="text-base text-primary font-medium space-x-5 hidden lg:block">
-                    <Link to="/" className="py-2 px-5 border rounded">Log in</Link>
                 </div>
                 { /* moblie menu */}
                 <div className="md:hidden block">
@@ -69,7 +69,6 @@ const Navbar = () => {
                     ))
                 }
                 <li className="text-white py-1">
-                <Link to="/" >Log in</Link>
                 </li>
                 </ul>
             </div>

@@ -65,8 +65,8 @@ export default function SignInSide() {
         case 'seeker':
           navigate("/seeker");
           break;
-        case 'admin':
-          navigate("/admin");
+        case 'employer':
+          navigate("/employeer");
           break;
         default:
           console.warn('Handle login failed: Role "'+ userSession.role +'" not existed');
@@ -91,13 +91,7 @@ export default function SignInSide() {
     onError: (error) => console.log(error)
   })
 
-  // Admin login, will remove later
-  const handleAdminLogin = () => {
-    const adminSession = { token: '', role: 'admin' };
-    setUser(adminSession);
-    navigate("/admin");
-  }
-
+ 
   return (
     <ThemeProvider theme={defaultTheme}>
       <Grid container component="main" sx={{ height: '100vh' }}>

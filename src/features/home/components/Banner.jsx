@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {FiMapPin, FiSearch} from "react-icons/fi"
-const Banner = ({query,handleInputChange}) => {
+const Banner = ({query,handleInputChange, handleSearch}) => {
 
    
     return (
@@ -9,7 +9,7 @@ const Banner = ({query,handleInputChange}) => {
             <p className="text-lg text-black/70 mb-8">
                 Có hàng ngàn công việc đang đợi bạn! Hãy Apply nào
             </p>
-            <form>
+            
                 <div className="flex justify-start md:flex-row flex-col md:gap-0 gap-4">
                     <div className="flex md:round-s-md rounded shadow-sm ring-1 ring-inset focus-within:ring-2
                     focus-within:ring-inset focus-within:ring-indigo-600 md:w-1/2 w-full"> 
@@ -28,9 +28,9 @@ const Banner = ({query,handleInputChange}) => {
                         />
                         <FiMapPin className="absolute mt-2.5 ml-2 text-gray-400"/>
                     </div>
-                    <button type="submit" className="bg-blue py-2 px-8 text-white md:rounded-s-none">Tìm kiếm</button>
+                    <button type="button" className="bg-blue py-2 px-8 text-white md:rounded-s-none" onClick={handleSearch}>Tìm kiếm</button>
                 </div>
-            </form>
+            
         </div>
     )
 }

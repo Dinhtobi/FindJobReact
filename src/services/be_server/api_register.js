@@ -5,7 +5,10 @@ export const registerSeeker = async (token, fromData) => {
     var urlString = serverUrl +"/account/seeker";
     var authToken = "Bearer " + token;
 
-
+    console.log("form JS");
+    for(var pair of fromData.entries()) {
+      console.log(pair[0]+ ': '+ pair[1]); 
+    }
     return await fetch(urlString,{
         method: "POST",
         mode: "cors",
@@ -33,7 +36,7 @@ export const registerSeeker = async (token, fromData) => {
 export const registerEmployeer = async (token, formData) => {
     var urlString = serverUrl + "/account/employeer";
     var authToken = "Bearer " + token;
-  
+
     return await fetch(urlString, {
       method: "POST",
       mode: "cors",
