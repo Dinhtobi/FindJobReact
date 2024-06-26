@@ -6,26 +6,61 @@ import { useUserContext } from 'contexts/UserContext';
 import { addJob } from '../services/be_server/api_job'
 import { useNavigate } from 'react-router-dom';
 const CreateJob = () => {
-    const [selectedOption, setSelectedOption] = useState(null);
+    const [optionsSkill, setOptionsSkill] = useState(null);
+
+    const [selectedOptionSkill, setSelectedOptionSkill] = useState(null);
+    const [selectedOptionField, setSelectedOptionField] = useState(null);
+    const [optionsField, setOptionsField] = useState(null);
     const [field, setField] = useState([]);
     const [user,] = useUserContext();
-    const navigate =  useNavigate();
+    const navigate = useNavigate();
     const serverUrl = config.be_rootUrl;
     var urlString = serverUrl + "/field"
+    var urlSkills = serverUrl + "/skill"
+
+
     useEffect(() => {
-        fetch(urlString, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Authorization": "Bearer " + user.token,
-                "Content-Type": "application/json",
-            },
-            redirect: "follow"
-        })
-            .then(res => res.json())
-            .then(data => {
-               setField(data);
+        Promise.all([
+            fetch(urlString, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Authorization": "Bearer " + user.token,
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow"
+            })
+                .then(res => res.json()),
+            fetch(urlSkills, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Authorization": "Bearer " + user.token,
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow"
+            }).then(res => res.json())
+        ])
+            .then(([fielData, skillData]) => {
+                const fieldOptions = fielData.map(field => ({
+                    label: field.name,
+                    value: field.name,
+                    __isNew__: false
+                }));
+                setOptionsField(fieldOptions);
+                if (skillData) {
+                    const skillOptions = skillData.map(skill => ({
+                        label: skill.name,
+                        value: skill.id,
+                        __isNew__: false
+                    }));
+                    setOptionsSkill(skillOptions);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
             })
     }, []);
 
@@ -36,26 +71,20 @@ const CreateJob = () => {
     } = useForm();
 
     const onSubmit = async (data) => {
-        data.requirements = selectedOption;
+        data.field = selectedOptionField;
         console.log(data);
         await addJob(user.token, data)
-        .then(data => {
-            console.log("Add job results " , data)
-        })
-        .catch(error => {
-            console.warn("Add Job faild ", error );
-            throw error
-        });
+            .then(data => {
+                console.log("Add job results ", data)
+            })
+            .catch(error => {
+                console.warn("Add Job faild ", error);
+                throw error
+            });
         alert("Công việc của bạn đã được thêm vào!")
-        navigate("/employeer")
+        navigate("/recruiter")
     };
 
-    const options = [
-        { value: "Java", label: "Java" },
-        { value: "Marketing", label: "Marketing" },
-        { value: "Photo", label: "Photo" },
-        { value: "Giao tiếp", label: "Giao tiếp" },
-    ]
 
 
     return (
@@ -73,12 +102,20 @@ const CreateJob = () => {
                             <input type="text" defaultValue={"Web Developer"}
                                 {...register("name")} className='create-job-input' />
                         </div>
-
                         <div className='lg:w-1/2 w-full'>
-                            <label className='block mb-2 text-lg'>Tên công ty</label>
-                            <input type="text" placeholder={"Ex: Microsoft"}
-                                {...register("companyName")} className='create-job-input' />
+                            <label className='block mb-2 text-lg'>Trình độ</label>
+                            <select {...register("level")} className='create-job-input'>
+                                <option value="">Chọn cấp bậc ứng tuyển</option>
+                                <option value="Mới tốt nghiệp">Mới tốt nghiệp</option>
+                                <option value="Nhân viên">Nhân viên</option>
+                                <option value="Trưởng phòng">Trưởng phòng</option>
+                                <option value="Quản lý">Quản lý</option>
+                                <option value="Trưởng nhóm">Trưởng nhóm</option>
+                                <option value="Giám đốc">Giám đốc</option>
+                            </select>
                         </div>
+
+
                     </div>
                     {/*2nd row */}
                     <div className='create-job-flex'>
@@ -95,27 +132,6 @@ const CreateJob = () => {
                         </div>
                     </div>
 
-                    {/*3rd row */}
-                    <div className='create-job-flex'>
-                        <div className='lg:w-1/2 w-full'>
-                            <label className='block mb-2 text-lg'>Level</label>
-                            <select {...register("level")} className='create-job-input'>
-                                <option value="">Chọn cấp bậc ứng tuyển</option>
-                                <option value="Mới tốt nghiệp">Mới tốt nghiệp</option>
-                                <option value="Nhân viên">Nhân viên</option>
-                                <option value="Trưởng phòng">Trưởng phòng</option>
-                                <option value="Quản lý">Quản lý</option>
-                                <option value="Trưởng nhóm">Trưởng nhóm</option>
-                                <option value="Giám đốc">Giám đốc</option>
-                            </select>
-                        </div>
-
-                        <div className='lg:w-1/2 w-full'>
-                            <label className='block mb-2 text-lg'>Địa chỉ</label>
-                            <input type="text" placeholder={"Ex: Đà Nẵng"}
-                                {...register("companyLocation")} className='create-job-input' />
-                        </div>
-                    </div>
 
                     {/*4th row */}
                     <div className='create-job-flex'>
@@ -139,50 +155,38 @@ const CreateJob = () => {
                     </div>
 
                     {/*5th row */}
-
-                    <div>
-                        <label className='block mb-2 text-lg'>Yêu cầu kỹ năng</label>
+                    <div className='w-full'>
+                        <label className='block mb-2 text-lg'>Chuyên ngành</label>
                         <CreatableSelect
-                            onChange={setSelectedOption}
-                            options={options}
+                            onChange={setSelectedOptionField}
+                            options={optionsField}
                             isMulti
                             className='create-job-input py-4' />
                     </div>
 
+
+
                     {/*6th row */}
-                    <div className='create-job-flex'>
-                        <div className='lg:w-1/2 w-full'>
-                            <label className='block mb-2 text-lg'>Logo công y</label>
-                            <input type="url" placeholder={"Điền URL logo công ty của bạn: https://react-select.com/img1"}
-                                {...register("companyLogo")} className='create-job-input' />
-                        </div>
-
-                        <div className='lg:w-1/2 w-full'>
-                            <label className='block mb-2 text-lg'>Chuyên ngành</label>
-                            <select {...register("field")} className='create-job-input'>
-                                <option value="">Chọn chuyên ngành cho công việc</option>
-                                {/*load back-end */
-                                field.map(element => 
-                                    <option key={element.name} value={element.name}>{element.name}</option>
-                                )
-                                }
-                            </select>
-                        </div>
-
+                    <div>
+                        <label className='block mb-2 text-lg'>Yêu cầu kỹ năng</label>
+                        <textarea className='w-full pl-3 py-1.5 focus:outline-none placeholder: text-gray-700'
+                            rows={6}
+                            defaultValue={"Đưa ra yêu cầu về công việc"}
+                            placeholder='Yêu cầu kỹ năng'
+                            {...register("requirements")}></textarea>
                     </div>
-
-                     {/*7th row */}
+                    {/*7th row */}
 
                     <div className='w-full'>
                         <label className='block mb-2 text-lg'>Mô tả công việc</label>
-                        <textarea className='w-full pl-3 py-1.5 focus:outline-none placeholder: text-gray-700' 
-                        rows={6}
-                        defaultValue={"Mô tả những thứ cần thiết cho công việc"}
-                        placeholder='Mô tả công việc'
-                         {...register("description")}></textarea>
+                        <textarea className='w-full pl-3 py-1.5 focus:outline-none placeholder: text-gray-700'
+                            rows={6}
+                            defaultValue={"Mô tả những thứ cần thiết cho công việc"}
+                            placeholder='Mô tả công việc'
+                            {...register("description")}></textarea>
                     </div>
 
-                    <input type="submit" className='block mt-12 bg-blue text-white font-semibold px-8 py-2 rounded-sm cursor-pointer' />
+                    <input type="submit" value="Đăng tin" className='block mt-12 bg-blue text-white font-semibold px-8 py-2 rounded-sm cursor-pointer' />
                 </form>
             </div>
         </div>

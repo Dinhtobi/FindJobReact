@@ -10,7 +10,7 @@ const PageHeader = ({ title, path }) => {
                 <h2 className='text-3xl text-blue font-medium mb-1 text-center'>
                     {title}
                 </h2>
-                <p className='text-sm text-center'><a href={user.role === 'employer' ? "/employeer" : "/seeker"}>Home</a>/ {path}</p>
+                <p className='text-sm text-center'><a href={ user.role === "candidate" ? "/home" : "/recruiter"}>{user.role === "candidate" ? "Home" : "Recruiter"}</a>/ {path}</p>
             </div>
         </div>
     )

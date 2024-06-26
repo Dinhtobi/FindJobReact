@@ -7,13 +7,20 @@ import { getJob, reommmendJob } from "../services/be_server/api_job"
 import config from 'config.json';
 import { useUserContext } from "contexts/UserContext";
 import Sidebar from "sidebar/Sidebar";
-import Newsletter from "features/home/components/Newsletter";
 import BotMessage from 'features/home/components/BotMessage';
 import HumanMessage from 'features/home/components/HumanMessage';
+import CardCompany from 'features/home/components/CardCompany';
+import CreatableSelect from 'react-select/creatable';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from 'react-slick';
+
+
 function Home() {
     // const [selectedName, setSelectedName] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedSalary, setSelectedSalary] = useState(null);
+    const [selectedField, setSelectedField] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedWorkExperience, setSelectedWorkExperience] = useState(null);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -23,34 +30,76 @@ function Home() {
     const [inputValue, setInputValue] = useState('');
     const [isBotTurn, setIsBotTurn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedOptionField, setSelectedOptionField] = useState({value: 0 , label: "Tìm theo chuyên ngành" , __isNew__: false} );
+    const [optionsField, setOptionsField] = useState(null);
+    const [company, setCompany] = useState([]);
 
     const [currentPage, setCurrenPage] = useState(1);
     const itemPerPage = 20;
     const [user,] = useUserContext();
 
     const serverUrl = config.be_rootUrl;
-    var urlString = serverUrl + "/post?size=20"
+    var urlPostString = serverUrl + "/post?size=20";
+    var urlCompanyString = serverUrl + "/company/top?size=10";
+    var urlField = serverUrl + "/field";
     useEffect(() => {
-        setIsLoading(true)
-        fetch(urlString, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Authorization": "Bearer " + user.token,
-                "Content-Type": "application/json",
-            },
-            redirect: "follow"
-        })
-            .then(res => res.json())
-            .then(data => {
-                setJobs(data.content);
-                setCurrenPage(data.page);
-                setTotalPage(data.totalPages);
-                setIsLoading(false);
+        setIsLoading(true);
+        Promise.all([
+            fetch(urlPostString, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow"
+            }).then(res => res.json()),
+            fetch(urlCompanyString, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow"
+            }).then(res => res.json())
+            ,
+            fetch(urlField, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow"
+            }).then(res => res.json())
+        ])
+            .then(([jobData, companyData, fieldData]) => {
+                setJobs(jobData.content);
+                setCurrenPage(jobData.page);
+                setTotalPage(jobData.totalPages);
+                if (companyData) {
+                    setCompany(companyData);
 
+                }
+                if (fieldData) {
+                    const fieldOptions = fieldData.map(field => ({
+                        label: field.name,
+                        value: field.id,
+                        __isNew__: false
+                    }));
+                    setOptionsField(fieldOptions);
+                }
             })
-    }, [messages])
+            .catch(error => {
+                console.error("Error fetching data:", error);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    }, [messages]);
+
+
 
 
     const [query, setQuery] = useState("");
@@ -64,24 +113,6 @@ function Home() {
     // const handleChangeName = (event) => {
     //     setSelectedName(event.target.value)
     // }
-
-    const handleChangeLocation = async (event) => {
-        setSelectedLocation(event.target.value)
-        await getJob(user.token, itemPerPage, 0, event.target.value, selectedDate, selectedWorkExperience,query)
-            .then(data => {
-                setJobs(data.content);
-                setCurrenPage(data.page);
-            })
-            .catch(error => {
-                alert(" Không thể lấy công việc");
-            })
-
-        setIsLoading(false);
-    }
-
-    const handleChangeSalary = async (event) => {
-        setSelectedSalary(event.target.value)
-    }
 
     const handleClickChatBot = () => {
         setIsExpanded(!isExpanded);
@@ -146,12 +177,63 @@ function Home() {
                 console.warn("Error Chat bot ", error)
             })
     }
-    const handleChangeDate = async (event) => {
-        setSelectedDate(event.target.value)
-        await getJob(user.token, itemPerPage, 0, selectedLocation, event.target.value, selectedWorkExperience,query)
+
+
+    const handleChangeLocation = async (event) => {
+        setSelectedLocation(event.target.value)
+        await getJob(itemPerPage, 0, event.target.value, selectedDate, selectedWorkExperience, selectedSalary, selectedOptionField.value, query)
             .then(data => {
                 setJobs(data.content);
                 setCurrenPage(data.page);
+                setTotalPage(data.totalPages);
+
+            })
+            .catch(error => {
+                alert(" Không thể lấy công việc");
+            })
+
+        setIsLoading(false);
+    }
+
+    const handleChangeField = async (selectedOption) => {
+        setSelectedOptionField(selectedOption);
+        await getJob(itemPerPage, 0, selectedLocation, selectedDate, selectedWorkExperience, selectedSalary, selectedOption.value, query)
+            .then(data => {
+                setJobs(data.content);
+                setCurrenPage(data.page);
+                setTotalPage(data.totalPages);
+
+            })
+            .catch(error => {
+                alert(" Không thể lấy công việc");
+            })
+
+        setIsLoading(false);
+    }
+
+    const handleChangeSalary = async (event) => {
+        setSelectedSalary(event.target.value)
+        await getJob(itemPerPage, 0, selectedLocation, selectedDate, selectedWorkExperience, event.target.value, selectedOptionField.value, query)
+            .then(data => {
+                setJobs(data.content);
+                setCurrenPage(data.page);
+                setTotalPage(data.totalPages);
+
+            })
+            .catch(error => {
+                alert(" Không thể lấy công việc");
+            })
+        setIsLoading(false);
+    }
+
+    const handleChangeDate = async (event) => {
+        setSelectedDate(event.target.value)
+        await getJob(itemPerPage, 0, selectedLocation, event.target.value, selectedWorkExperience, selectedSalary, selectedOptionField.value, query)
+            .then(data => {
+                setJobs(data.content);
+                setCurrenPage(data.page);
+                setTotalPage(data.totalPages);
+
             })
             .catch(error => {
                 alert(" Không thể lấy công việc");
@@ -161,10 +243,12 @@ function Home() {
 
     const handleChangeWorkExpirence = async (event) => {
         setSelectedWorkExperience(event.target.value)
-        await getJob(user.token, itemPerPage, 0, selectedLocation, selectedDate, event.target.value,query)
+        await getJob(itemPerPage, 0, selectedLocation, selectedDate, event.target.value, selectedSalary, selectedOptionField.value, query)
             .then(data => {
                 setJobs(data.content);
                 setCurrenPage(data.page);
+                setTotalPage(data.totalPages);
+
             })
             .catch(error => {
                 alert(" Không thể lấy công việc");
@@ -173,15 +257,13 @@ function Home() {
     }
 
     // ---------------button based filtering ---------
-    const handleClickSalary = (event) => {
-        setSelectedSalary(event.target.value)
-    }
+
 
     // function for the next page 
     const nextPage = async () => {
         if (currentPage < totalPage) {
             setIsLoading(true);
-            await getJob(user.token, itemPerPage, currentPage + 1, selectedLocation, selectedDate, selectedWorkExperience,query)
+            await getJob(itemPerPage, currentPage + 1, selectedLocation, selectedDate, selectedWorkExperience, selectedSalary,  selectedOptionField.value, query)
                 .then(data => {
                     setJobs(data.content);
                     setCurrenPage(data.page);
@@ -198,7 +280,7 @@ function Home() {
     const prevPage = async () => {
         if (currentPage > 0) {
             setIsLoading(true);
-            await getJob(user.token, itemPerPage, currentPage - 1, selectedLocation, selectedDate, selectedWorkExperience,query)
+            await getJob(itemPerPage, currentPage - 1, selectedLocation, selectedDate, selectedWorkExperience, selectedSalary,  selectedOptionField.value, query)
                 .then(data => {
                     setJobs(data.content);
                     setCurrenPage(data.page);
@@ -210,45 +292,21 @@ function Home() {
         }
     }
 
-    const handleRecommend = async () => {
-        if (user.role === 'seeker') {
-            await reommmendJob(user.token)
-                .then(data => {
-                    setJobs(data);
-                    setCurrenPage(0);
-                    
-                })
-                .catch(error => {
-                    alert(" Không thể lấy công việc");
-                })
-            setIsLoading(false);
-        } else {
-            alert("Mục này dành cho các ứng viên")
-        }
-    }
+
 
     // main function
-    const filterdData = (jobs, selectedLocation, selectedSalary, selectedDate, selectedWorkExperience, query) => {
-        let filteredJobs = jobs;
+    const filterdData = (jobs) => {
 
-        //filtering input items
-        if (query) {
-            filteredJobs = filteredItems;
-        }
+        return jobs.map((data, i) => <Card key={i} data={data} />)
+    }
 
-
-        if (selectedSalary) {
-            filteredJobs = filteredJobs.filter(({ salary }) => (
-                (salary === "Cạnh tranh" ? salary.toLowerCase().includes(selectedSalary.toLowerCase()) : parseInt(salary.split(" ")[3]) < parseInt(selectedSalary))));
-        }
-
-
-        return filteredJobs.map((data, i) => <Card key={i} data={data} role={user.role} />)
+    const filterdCompany = (company) => {
+        return company.map((data, i) => <CardCompany key={i} data={data} />)
     }
 
     const handleSearch = async () => {
         setIsLoading(true);
-        await getJob(user.token, itemPerPage, 0, selectedLocation, selectedDate, selectedWorkExperience,query)
+        await getJob(itemPerPage, 0, selectedLocation, selectedDate, selectedWorkExperience, selectedSalary,  selectedOptionField.value, query)
             .then(data => {
                 setJobs(data.content);
                 setCurrenPage(data.page);
@@ -258,20 +316,48 @@ function Home() {
             })
         setIsLoading(false);
     }
-    const results = filterdData(jobs, selectedLocation, selectedSalary, selectedDate, selectedWorkExperience, query);
+    const results = filterdData(jobs, selectedSalary, query);
+
+    const resultsCompany = filterdCompany(company);
+
+    const settings = {
+        dots: true,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 3,
+        slidesToScroll: 3
+    };
     return (
         <>
+            <Banner query={query} handleInputChange={handleInputChange} handleSearch={handleSearch} />
 
-            <Banner query={query} handleInputChange={handleInputChange} handleSearch={handleSearch}/>
-
-            <div className="bg-[#FAFAFA] md:grid grid-cols-4 gap-8 lg:px-24 px-4 py-12">
+            {/* Company */}
+            <div className='max-w-screen-2xl container mx-auto xl:px-24 px-4 md:py-2 py-2'>
+                <h2 className='text-lg text-black/70 mb-2'> Các công ty hàng đầu</h2>
+                <div className='w-full mt-auto'>
+                    <div className="mt-1">
+                        <Slider {...settings}>
+                            {resultsCompany}
+                        </Slider>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-[#FAFAFA] md:grid grid-cols-4 gap-8 lg:px-10 px-2 py-12">
                 {/*let side */}
                 <div className="bg-white p-4 rounded">
-                    <Sidebar handleChangeLocation={handleChangeLocation} handleChangeSalary={handleChangeSalary} handleChangeDate={handleChangeDate} handleChangeWorkExpirence={handleChangeWorkExpirence} handleClickSalary={handleClickSalary} />
+                    <Sidebar handleChangeLocation={handleChangeLocation} handleChangeSalary={handleChangeSalary} handleChangeDate={handleChangeDate} handleChangeWorkExpirence={handleChangeWorkExpirence} />
                 </div>
                 {/* job cards*/}
-                <div className="col-span-2 bg-white p-4 rounded-sm">
+                <div className="col-span-3 bg-white p-4 rounded-sm">
+                    <div className='w-full'>
+                        <label className='block mb-2 text-lg'>Chuyên ngành</label>
+                        <CreatableSelect
+                            onChange={handleChangeField}
+                            options={optionsField}
+                            className='create-job-input py-4' />
+                    </div>
                     {
+
                         isLoading ? (<p className="font-medium">Đang tải ...</p>) : results.length > 0 ? <Jobs results={results} /> : <>
                             <h3 className="text-lg font-bold mb-2">{results.length} Công việc</h3>
                             <p>Không tìm thấy dữ liệu</p>
@@ -282,14 +368,14 @@ function Home() {
                         results.length > 0 ? (
                             <div className="flex justify-center mt-4 space-x-8">
                                 <button onClick={prevPage} disabled={currentPage === 0} className="hover:underline">Previous</button>
-                                <span className="mx-2">Page {currentPage + 1} of {totalPage + 1}</span>
-                                <button onClick={nextPage} disabled={currentPage === totalPage} className="hover:underline">Next</button>
+                                <span className="mx-2">Page {currentPage + 1} of {totalPage}</span>
+                                <button onClick={nextPage} disabled={currentPage + 1 === totalPage} className="hover:underline">Next</button>
                             </div>
                         ) : ""
                     }
                 </div>
                 {/*right side */}
-                <div className="bg-white p-4 rounded"><Newsletter handleRecommend={handleRecommend} /></div>
+                {/* <div className="bg-white p-4 rounded"><Newsletter handleRecommend={handleRecommend} /></div> */}
 
                 {/*chat bot */}
 

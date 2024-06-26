@@ -1,19 +1,18 @@
 import { useUserContext } from 'contexts/UserContext';
 import Footer from 'features/home/components/Footer';
-import Navbar from 'features/home/components/Navbar';
+import NavbarRecruiter from 'features/home/components/NavbarRecruiter';
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-const Main = () => {
+const MainRecruiter = () => {
     const [user,] = useUserContext();
     return (
         <div>
-            <Navbar role={user !== null ? user.role : null}></Navbar>
-            <hr class=" border-gray-200 sm:mx-auto dark:border-gray-700" />
+            <NavbarRecruiter role={user !== null ? user.role : null}></NavbarRecruiter>
             <Outlet />
             <Footer></Footer>
         </div>
     )
 }
 
-export default Main;
+export default MainRecruiter;

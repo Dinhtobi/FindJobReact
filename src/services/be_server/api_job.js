@@ -1,7 +1,7 @@
 import config from 'config.json';
 
 const serverUrl = config.be_rootUrl;
-export const getJob = async (token,size,number,location, postingDate,experience,keyword) =>{
+export const getJob = async (size,number,location, postingDate,experience,salary,field,keyword) =>{
     var urlString = serverUrl +"/post?size=" + size +"&number=" +number 
     if(location !== null && location !== "")
         urlString += "&location=" + location;
@@ -9,6 +9,12 @@ export const getJob = async (token,size,number,location, postingDate,experience,
         urlString += "&postingDate=" +postingDate;
     if(experience !== null && experience !== "") 
         urlString += "&experience=" +experience
+    if(salary !== null && salary !== ""){
+        urlString += "&salary=" + salary;
+    }
+    if(field !== null && field !== undefined){
+        urlString += "&field=" + field;
+    }
     if(keyword !== null && keyword !== ""){
         urlString += "&keyword=" +keyword + "&searchField=name"
     }
@@ -18,7 +24,6 @@ export const getJob = async (token,size,number,location, postingDate,experience,
         mode: "cors",
         cache: "no-cache",
         headers: {
-            "Authorization": "Bearer " + token,
             "Content-Type": "application/json",
         },
         redirect: "follow"
@@ -86,7 +91,7 @@ export const updateJob = async (token,data,id) => {
         return result;
     })
     .catch(error => {
-        console.warn('Add Job failed: ' , error);
+        console.warn('Update Job failed: ' , error);
         throw error;
     })
 }

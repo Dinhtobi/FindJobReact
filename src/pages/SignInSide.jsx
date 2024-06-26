@@ -62,11 +62,11 @@ export default function SignInSide() {
     if (userSession.status === 'success') {
       setUser(userSession);
       switch (userSession.role) {
-        case 'seeker':
-          navigate("/seeker");
+        case 'candidate':
+          navigate("/home");
           break;
-        case 'employer':
-          navigate("/employeer");
+        case 'recruiter':
+          navigate("/recruiter");
           break;
         default:
           console.warn('Handle login failed: Role "'+ userSession.role +'" not existed');
