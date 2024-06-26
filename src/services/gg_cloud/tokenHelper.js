@@ -4,7 +4,8 @@ const tokenProvider = 'https://oauth2.googleapis.com/token';
 
 // Lấy tokens từ GG Cloud bằng authorization code
 export const getTokensByAuthCode = async (authCode) => {
-  const params = `?code=${authCode}&client_id=${config.gg_cloud.client_id}&client_secret=${config.gg_cloud.client_secret}&redirect_uri=postmessage&grant_type=authorization_code`;
+  
+  const params = `?code=${authCode}&client_id=439847719014-pkff4061t2kdmokun7m3iggr6isgpea6.apps.googleusercontent.com&client_secret=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&redirect_uri=postmessage&grant_type=authorization_code`;
 
   return await fetch(tokenProvider+params, {
     method: 'POST'
@@ -26,7 +27,8 @@ export const getTokensByAuthCode = async (authCode) => {
 
 // Gọi làm mới tokens
 export const refreshTokens = async (refreshToken) => {
-  const params = `?client_id=${config.gg_cloud.client_id}&client_secret=${config.gg_cloud.client_secret}&refresh_token=${refreshToken}&grant_type=refresh_token`;
+  
+  const params = `?client_id=439847719014-pkff4061t2kdmokun7m3iggr6isgpea6.apps.googleusercontent.com&client_secret=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&refresh_token=${refreshToken}&grant_type=refresh_token`;
 
   return await fetch(tokenProvider+params, {
     method: 'POST'
